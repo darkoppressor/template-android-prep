@@ -89,6 +89,7 @@ int main(int argc,char* args[]){
 
         boost::algorithm::erase_all(new_location,"../");
         boost::algorithm::erase_all(new_location,"data\\");
+        boost::algorithm::erase_all(new_location,"data/");
 
         boost::filesystem::copy(dir->path(),"assets/data/"+new_location);
     }

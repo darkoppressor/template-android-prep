@@ -81,20 +81,35 @@ int main(int argc,char* args[]){
 
     file_io.remove_directory("assets");
     file_io.create_directory("assets");
-    boost::filesystem::copy_file("../save_location.cfg","assets/");
-    boost::filesystem::copy_directory("../data","assets/");
+    boost::filesystem::copy_file("../../save_location.cfg","assets/save_location.cfg");
+
+    file_io.create_directory("assets/data");
+    for(boost::filesystem::recursive_directory_iterator dir("../../data"),end;dir!=end;dir++){
+        string new_location=dir->path().string();
+
+        boost::algorithm::erase_all(new_location,"../");
+        boost::algorithm::erase_all(new_location,"data\\");
+
+        boost::filesystem::copy(dir->path(),"assets/data/"+new_location);
+    }
 
     create_asset_list("assets/data");
     create_asset_list("assets/data/images");
     create_asset_list("assets/data/music");
     create_asset_list("assets/data/sounds");
 
+    file_io.remove_file("jni/SDL2");
+    file_io.remove_file("jni/SDL2_image");
+    file_io.remove_file("jni/SDL2_mixer");
+    file_io.remove_file("jni/RakNet");
+    file_io.remove_file("jni/boost");
+
     #ifdef GAME_OS_WINDOWS
-        boost::filesystem::create_symlink("C:\Development\c++\android\SDL2","jni/SDL2");
-        boost::filesystem::create_symlink("C:\Development\c++\android\SDL2_image","jni/SDL2_image");
-        boost::filesystem::create_symlink("C:\Development\c++\android\SDL2_mixer","jni/SDL2_mixer");
-        boost::filesystem::create_symlink("C:\Development\c++\android\raknet\raknet","jni/RakNet");
-        boost::filesystem::create_symlink("C:\Development\c++\boost","jni/boost");
+        system("mklink /D jni\\SDL2 C:\\Development\\c++\\android\\SDL2");
+        system("mklink /D jni\\SDL2_image C:\\Development\\c++\\android\\SDL2_image");
+        system("mklink /D jni\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer");
+        system("mklink /D jni\\RakNet C:\\Development\\c++\\android\\raknet\\raknet");
+        system("mklink /D jni\\boost C:\\Development\\c++\\boost");
     #endif
 
     #ifdef GAME_OS_LINUX
@@ -110,17 +125,11 @@ int main(int argc,char* args[]){
     file_io.remove_file("ant.properties");
     file_io.remove_file("local.properties");
 
-    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/ant.properties","./");
-    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/local.properties","./");
+    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/ant.properties","./ant.properties");
+    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/local.properties","./local.properties");
 
     replace_in_file("ant.properties","STORE_PASSWORD",key_passwords[0]);
     replace_in_file("ant.properties","ALIAS_PASSWORD",key_passwords[1]);
-
-    /**file_io.remove_file("jni/SDL2");
-    file_io.remove_file("jni/SDL2_image");
-    file_io.remove_file("jni/SDL2_mixer");
-    file_io.remove_file("jni/RakNet");
-    file_io.remove_file("jni/boost");*/
 
     return 0;
 }
@@ -173,7 +182,7 @@ void create_asset_list(string directory){
         }
     }
 
-    file_io.save_file(directory,assets);
+    file_io.save_file(directory+"/asset_list",assets);
 }
 
 void update_source_file_list(){

@@ -21,7 +21,7 @@ string File_IO::load_file(string path){
 }
 
 bool File_IO::save_file(string path,string data){
-    ofstream file;
+    ofstream file(path.c_str());
 
     if(file.is_open()){
         file<<data;

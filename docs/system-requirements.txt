@@ -1,0 +1,7 @@
+Windows
+OS: XP / Vista / 7 / 8
+Architecture: x86_64
+
+Linux
+Architecture: x86_64
+Requires glibc 2.19 or newer

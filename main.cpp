@@ -215,30 +215,46 @@ void rename_file(string target,string replacement){
     boost::filesystem::rename(target,replacement);
 }
 
-void replace_in_file(string file,string target,string replacement){
-    string temp=file+".tmp";
-    rename_file(file,temp);
+void replace_in_file(string filename,string target,string replacement){
+    vector<string> file_data;
 
-    ifstream load(temp.c_str());
-    ofstream save(file.c_str());
+    ifstream file(filename.c_str());
 
-    if(load!=0 && save!=0){
-        while(!load.eof()){
+    if(file.is_open()){
+        while(!file.eof()){
             string line="";
 
-            getline(load,line);
+            getline(file,line);
 
-            boost::algorithm::replace_first(line,target,replacement);
-
-            save<<line<<"\n";
+            file_data.push_back(line);
         }
     }
+    else{
+        print_error("Failed to open "+filename+" for updating (input phase)");
+    }
 
-    load.close();
-    load.clear();
+    file.close();
+    file.clear();
 
-    save.close();
-    save.clear();
+    for(int i=0;i<file_data.size();i++){
+        boost::algorithm::replace_first(file_data[i],target,replacement);
+    }
 
-    boost::filesystem::remove(temp);
+    ofstream file_save(filename.c_str());
+
+    if(file_save.is_open()){
+        for(int i=0;i<file_data.size();i++){
+            file_save<<file_data[i];
+
+            if(i<file_data.size()-1){
+                file_save<<"\n";
+            }
+        }
+    }
+    else{
+        print_error("Failed to open "+filename+" for updating (output phase)");
+    }
+
+    file_save.close();
+    file_save.clear();
 }

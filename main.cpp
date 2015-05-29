@@ -94,10 +94,7 @@ int main(int argc,char* args[]){
         boost::filesystem::copy(dir->path(),"assets/data/"+new_location);
     }
 
-    create_asset_list("assets/data");
-    create_asset_list("assets/data/images");
-    create_asset_list("assets/data/music");
-    create_asset_list("assets/data/sounds");
+    create_asset_lists("assets/data");
 
     file_io.remove_file("jni/SDL2");
     file_io.remove_file("jni/SDL2_image");
@@ -164,6 +161,20 @@ vector<string> get_key_passwords(const Options& options){
     file.clear();
 
     return key_passwords;
+}
+
+void create_asset_lists(string directory){
+    create_asset_list(directory);
+
+    for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
+        if(it.is_directory()){
+            string file_name=it.get_file_name();
+
+            boost::algorithm::trim(file_name);
+
+            create_asset_lists(directory+"/"+file_name);
+        }
+    }
 }
 
 void create_asset_list(string directory){

@@ -21,6 +21,8 @@ int main(int argc,char* args[]);
 
 std::vector<std::string> get_key_passwords(const Options& options);
 
+void create_asset_lists(std::string directory);
+
 void create_asset_list(std::string directory);
 
 void update_source_file_list();

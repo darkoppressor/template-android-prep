@@ -192,14 +192,14 @@ int main(int argc,char* args[]){
     file_io.remove_file(android_directory+"/ant.properties");
     file_io.remove_file(android_directory+"/local.properties");
 
-    string build_scripts_platform="windows";
+    string properties_platform="windows";
 
     #ifdef GAME_OS_LINUX
-        build_scripts_platform="linux";
+        properties_platform="linux";
     #endif
 
-    file_io.copy_file(android_directory+"/build-scripts/"+build_scripts_platform+"/ant.properties",android_directory+"/ant.properties");
-    file_io.copy_file(android_directory+"/build-scripts/"+build_scripts_platform+"/local.properties",android_directory+"/local.properties");
+    file_io.copy_file(android_directory+"/properties/"+properties_platform+"/ant.properties",android_directory+"/ant.properties");
+    file_io.copy_file(android_directory+"/properties/"+properties_platform+"/local.properties",android_directory+"/local.properties");
 
     if(!replace_in_file(android_directory+"/ant.properties","STORE_PASSWORD",key_passwords[0],true)){
         return 1;

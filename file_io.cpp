@@ -65,6 +65,12 @@ void File_IO::create_directory(string path){
     boost::filesystem::create_directory(path);
 }
 
+void File_IO::copy_file(string old_path,string new_path){
+    if(is_regular_file(old_path) && !file_exists(new_path)){
+        boost::filesystem::copy(old_path,new_path);
+    }
+}
+
 void File_IO::remove_file(string path){
     boost::filesystem::remove(path);
 }

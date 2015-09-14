@@ -7,7 +7,6 @@
 #include "file_io.h"
 
 #include <iostream>
-#include <vector>
 #include <fstream>
 
 #include <boost/filesystem.hpp>
@@ -25,6 +24,8 @@ Options::Options(){
 }
 
 bool Options::load(){
+    cout<<"Reading android-prep-options\n";
+
     ifstream file("android-prep-options");
 
     if(file.is_open()){
@@ -47,6 +48,14 @@ bool Options::load(){
             }
         }
     }
+    else{
+        print_error("Failed to open android-prep-options for reading options");
+
+        file.close();
+        file.clear();
+
+        return false;
+    }
 
     file.close();
     file.clear();
@@ -65,6 +74,39 @@ int main(int argc,char* args[]){
     String_Stuff string_stuff;
     Options options;
 
+    //Can this even happen?
+    if(argc<=0){
+        print_error("Did not receive the program name");
+
+        return 1;
+    }
+    else if(argc!=2){
+        string program_name=args[0];
+
+        cout<<program_name<<" - prepare the android/ directory of a Cheese Engine project for building\n";
+        cout<<"Usage: "<<program_name<<" PROJECT-DIRECTORY\n";
+
+        return 0;
+    }
+
+    string project_directory=args[1];
+
+    if(project_directory.length()==0){
+        print_error("The PROJECT-DIRECTORY argument has a length of 0");
+
+        return 1;
+    }
+
+    if(boost::algorithm::ends_with(project_directory,"/") || boost::algorithm::ends_with(project_directory,"\\")){
+        project_directory.erase(project_directory.begin()+project_directory.length()-1);
+    }
+
+    if(!boost::filesystem::is_directory(project_directory)){
+        print_error("No such directory: "+project_directory);
+
+        return 1;
+    }
+
     if(!options.load()){
         return 1;
     }
@@ -72,10 +114,77 @@ int main(int argc,char* args[]){
     vector<string> key_passwords=get_key_passwords(options);
 
     if(key_passwords.size()!=2){
-        print_error("Incorrect number of key passwords in the key passwords file");
+        print_error("Incorrect number of key passwords");
 
-        return 2;
+        return 1;
     }
+
+    string android_directory=project_directory+"/development/android";
+
+    cout<<"Populating assets/ directory\n";
+
+    file_io.remove_directory(android_directory+"/assets");
+    file_io.create_directory(android_directory+"/assets");
+    file_io.copy_file(project_directory+"/save_location.cfg",android_directory+"/assets/save_location.cfg");
+
+    file_io.create_directory(android_directory+"/assets/data");
+    for(boost::filesystem::recursive_directory_iterator dir(project_directory+"/data"),end;dir!=end;dir++){
+        string new_location=dir->path().string();
+        correct_slashes(&new_location);
+
+        string remove_string=project_directory+"/data/";
+        correct_slashes(&remove_string);
+
+        boost::algorithm::erase_first(new_location,remove_string);
+
+        boost::filesystem::copy(dir->path(),android_directory+"/assets/data/"+new_location);
+    }
+
+    cout<<"Creating asset lists\n";
+
+    if(!create_asset_lists(android_directory+"/assets/data")){
+        return 1;
+    }
+
+    cout<<"Creating symlinks to development libraries\n";
+
+    file_io.remove_file(android_directory+"/jni/SDL2");
+    file_io.remove_file(android_directory+"/jni/SDL2_image");
+    file_io.remove_file(android_directory+"/jni/SDL2_mixer");
+    file_io.remove_file(android_directory+"/jni/RakNet");
+    file_io.remove_file(android_directory+"/jni/boost");
+
+    #ifdef GAME_OS_WINDOWS
+        string windows_android_dir=android_directory;
+        boost::algorithm::replace_all(windows_android_dir,"/","\\");
+        string mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2 C:\\Development\\c++\\android\\SDL2";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\RakNet C:\\Development\\c++\\android\\raknet\\raknet";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\boost C:\\Development\\c++\\boost";
+        system(mklink.c_str());
+    #endif
+
+    #ifdef GAME_OS_LINUX
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",android_directory+"/jni/SDL2");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",android_directory+"/jni/SDL2_image");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/SDL2_mixer");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",android_directory+"/jni/RakNet");
+        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",android_directory+"/jni/boost");
+    #endif
+
+    if(!update_source_file_list(project_directory)){
+        return 1;
+    }
+
+    cout<<"Preparing .properties files\n";
+
+    file_io.remove_file(android_directory+"/ant.properties");
+    file_io.remove_file(android_directory+"/local.properties");
 
     string build_scripts_platform="windows";
 
@@ -83,57 +192,21 @@ int main(int argc,char* args[]){
         build_scripts_platform="linux";
     #endif
 
-    file_io.remove_directory("assets");
-    file_io.create_directory("assets");
-    boost::filesystem::copy_file("../../save_location.cfg","assets/save_location.cfg");
+    file_io.copy_file(android_directory+"/build-scripts/"+build_scripts_platform+"/ant.properties",android_directory+"/ant.properties");
+    file_io.copy_file(android_directory+"/build-scripts/"+build_scripts_platform+"/local.properties",android_directory+"/local.properties");
 
-    file_io.create_directory("assets/data");
-    for(boost::filesystem::recursive_directory_iterator dir("../../data"),end;dir!=end;dir++){
-        string new_location=dir->path().string();
-
-        boost::algorithm::erase_all(new_location,"../");
-        boost::algorithm::erase_all(new_location,"data\\");
-        boost::algorithm::erase_all(new_location,"data/");
-
-        boost::filesystem::copy(dir->path(),"assets/data/"+new_location);
+    if(!replace_in_file(android_directory+"/ant.properties","STORE_PASSWORD",key_passwords[0],true)){
+        return 1;
+    }
+    if(!replace_in_file(android_directory+"/ant.properties","ALIAS_PASSWORD",key_passwords[1],true)){
+        return 1;
     }
 
-    create_asset_lists("assets/data");
-
-    file_io.remove_file("jni/SDL2");
-    file_io.remove_file("jni/SDL2_image");
-    file_io.remove_file("jni/SDL2_mixer");
-    file_io.remove_file("jni/RakNet");
-    file_io.remove_file("jni/boost");
-
-    #ifdef GAME_OS_WINDOWS
-        system("mklink /D jni\\SDL2 C:\\Development\\c++\\android\\SDL2");
-        system("mklink /D jni\\SDL2_image C:\\Development\\c++\\android\\SDL2_image");
-        system("mklink /D jni\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer");
-        system("mklink /D jni\\RakNet C:\\Development\\c++\\android\\raknet\\raknet");
-        system("mklink /D jni\\boost C:\\Development\\c++\\boost");
-    #endif
-
-    #ifdef GAME_OS_LINUX
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2","jni/SDL2");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image","jni/SDL2_image");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer","jni/SDL2_mixer");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet","jni/RakNet");
-        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost","jni/boost");
-    #endif
-
-    update_source_file_list();
-
-    file_io.remove_file("ant.properties");
-    file_io.remove_file("local.properties");
-
-    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/ant.properties","./ant.properties");
-    boost::filesystem::copy_file("build-scripts/"+build_scripts_platform+"/local.properties","./local.properties");
-
-    replace_in_file("ant.properties","STORE_PASSWORD",key_passwords[0]);
-    replace_in_file("ant.properties","ALIAS_PASSWORD",key_passwords[1]);
-
     return 0;
+}
+
+void correct_slashes(string* str_input){
+    boost::algorithm::replace_all(*str_input,"\\","/");
 }
 
 vector<string> get_key_passwords(const Options& options){
@@ -144,6 +217,8 @@ vector<string> get_key_passwords(const Options& options){
     #ifdef GAME_OS_LINUX
         keypass_file=options.key_passwords_location_linux;
     #endif
+
+    cout<<"Reading key passwords from "<<keypass_file<<"\n";
 
     ifstream file(keypass_file.c_str());
 
@@ -160,6 +235,9 @@ vector<string> get_key_passwords(const Options& options){
             }
         }
     }
+    else{
+        print_error("Failed to open "+keypass_file+" for reading key passwords");
+    }
 
     file.close();
     file.clear();
@@ -167,8 +245,10 @@ vector<string> get_key_passwords(const Options& options){
     return key_passwords;
 }
 
-void create_asset_lists(string directory){
-    create_asset_list(directory);
+bool create_asset_lists(string directory){
+    if(!create_asset_list(directory)){
+        return false;
+    }
 
     for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
         if(it.is_directory()){
@@ -176,12 +256,16 @@ void create_asset_lists(string directory){
 
             boost::algorithm::trim(file_name);
 
-            create_asset_lists(directory+"/"+file_name);
+            if(!create_asset_lists(directory+"/"+file_name)){
+                return false;
+            }
         }
     }
+
+    return true;
 }
 
-void create_asset_list(string directory){
+bool create_asset_list(string directory){
     string assets="";
 
     File_IO file_io;
@@ -198,15 +282,19 @@ void create_asset_list(string directory){
         }
     }
 
-    file_io.save_file(directory+"/asset_list",assets);
+    return file_io.save_file(directory+"/asset_list",assets);
 }
 
-void update_source_file_list(){
+bool update_source_file_list(string project_directory){
+    string android_directory=project_directory+"/development/android";
+
+    cout<<"Updating source file list in "<<android_directory<<"/jni/src/Android.mk\n";
+
     string source_files="";
 
     File_IO file_io;
 
-    for(File_IO_Directory_Iterator it("../..");it.evaluate();it.iterate()){
+    for(File_IO_Directory_Iterator it(project_directory);it.evaluate();it.iterate()){
         if(it.is_regular_file()){
             string file_name=it.get_file_name();
 
@@ -220,17 +308,26 @@ void update_source_file_list(){
 
     boost::algorithm::erase_last(source_files," \\");
 
-    file_io.remove_file("jni/src/Android.mk");
-    boost::filesystem::copy_file("jni/src/Android.mk.template","jni/src/Android.mk");
+    file_io.remove_file(android_directory+"/jni/src/Android.mk");
+    file_io.copy_file(android_directory+"/jni/src/Android.mk.template",android_directory+"/jni/src/Android.mk");
 
-    replace_in_file("jni/src/Android.mk","SOURCE_FILE_LIST_GOES_HERE",source_files);
+    return replace_in_file(android_directory+"/jni/src/Android.mk","SOURCE_FILE_LIST_GOES_HERE",source_files);
 }
 
-void rename_file(string target,string replacement){
-    boost::filesystem::rename(target,replacement);
-}
+bool replace_in_file(string filename,string target,string replacement,bool hide_replacement){
+    if(!boost::filesystem::exists(filename)){
+        print_error("No such file: "+filename);
 
-void replace_in_file(string filename,string target,string replacement){
+        return false;
+    }
+
+    string terminal_replacement=replacement;
+    if(hide_replacement){
+        terminal_replacement="REDACTED";
+    }
+
+    cout<<"Renaming all occurrences of "<<target<<" to "<<terminal_replacement<<" in "<<filename<<"\n";
+
     vector<string> file_data;
 
     ifstream file(filename.c_str());
@@ -246,13 +343,18 @@ void replace_in_file(string filename,string target,string replacement){
     }
     else{
         print_error("Failed to open "+filename+" for updating (input phase)");
+
+        file.close();
+        file.clear();
+
+        return false;
     }
 
     file.close();
     file.clear();
 
     for(int i=0;i<file_data.size();i++){
-        boost::algorithm::replace_first(file_data[i],target,replacement);
+        boost::algorithm::replace_all(file_data[i],target,replacement);
     }
 
     ofstream file_save(filename.c_str());
@@ -268,8 +370,15 @@ void replace_in_file(string filename,string target,string replacement){
     }
     else{
         print_error("Failed to open "+filename+" for updating (output phase)");
+
+        file_save.close();
+        file_save.clear();
+
+        return false;
     }
 
     file_save.close();
     file_save.clear();
+
+    return true;
 }

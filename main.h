@@ -23,16 +23,16 @@ public:
 
 int main(int argc,char* args[]);
 
+void correct_slashes(std::string* str_input);
+
 std::vector<std::string> get_key_passwords(const Options& options);
 
-void create_asset_lists(std::string directory);
+bool create_asset_lists(std::string directory);
 
-void create_asset_list(std::string directory);
+bool create_asset_list(std::string directory);
 
-void update_source_file_list();
+bool update_source_file_list(std::string project_directory);
 
-void rename_file(std::string target,std::string replacement);
-
-void replace_in_file(std::string filename,std::string target,std::string replacement);
+bool replace_in_file(std::string filename,std::string target,std::string replacement,bool hide_replacement=false);
 
 #endif

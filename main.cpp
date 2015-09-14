@@ -127,6 +127,12 @@ int main(int argc,char* args[]){
     file_io.create_directory(android_directory+"/assets");
     file_io.copy_file(project_directory+"/save_location.cfg",android_directory+"/assets/save_location.cfg");
 
+    //Android always needs the save location to be set to home, so we will make sure
+    //it is set to that here
+    if(!replace_in_file(android_directory+"/assets/save_location.cfg","local","home")){
+        return 1;
+    }
+
     file_io.create_directory(android_directory+"/assets/data");
     for(boost::filesystem::recursive_directory_iterator dir(project_directory+"/data"),end;dir!=end;dir++){
         string new_location=dir->path().string();

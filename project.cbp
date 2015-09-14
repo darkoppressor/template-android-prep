@@ -9,13 +9,14 @@
 		<Build>
 			<Target title="Release-Windows-x86_64">
 				<Option platforms="Windows;" />
-				<Option output="android-prep-windows-x86_64.exe" prefix_auto="1" extension_auto="0" />
+				<Option output="Android-Prep-Windows-x86_64.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output=".objs/windows-x86_64" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
+					<Add option="-std=c++11" />
 					<Add option="-w" />
 					<Add option="-m64" />
 					<Add option="-DGAME_OS_WINDOWS" />
@@ -32,13 +33,14 @@
 			</Target>
 			<Target title="Release-Linux-x86_64">
 				<Option platforms="Unix;" />
-				<Option output="android-prep-linux-x86_64" prefix_auto="1" extension_auto="0" />
+				<Option output="Android-Prep-Linux-x86_64" prefix_auto="1" extension_auto="0" />
 				<Option object_output=".objs/linux-x86_64" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
+					<Add option="-std=c++11" />
 					<Add option="-w" />
 					<Add option="-m64" />
 					<Add option="-DGAME_OS_LINUX" />
@@ -53,6 +55,39 @@
 					<Add library="\home\tails\build-server\linux-x86_64\boost\stage\lib\libboost_filesystem.a" />
 				</Linker>
 			</Target>
+			<Target title="Cross-Compile-Windows-x86_64">
+				<Option platforms="Unix;" />
+				<Option output="Android-Prep-Windows-x86_64.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output=".objs/windows-x86_64" />
+				<Option type="1" />
+				<Option compiler="mingw_x86_64_compiler" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-w" />
+					<Add option="-m64" />
+					<Add option="-DGAME_OS_WINDOWS" />
+					<Add directory="/usr/x86_64-w64-mingw32/include" />
+					<Add directory="/home/tails/build-server/windows-x86_64/boost/" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-m64" />
+					<Add option="-Wl,--stack=67108864" />
+					<Add option="-static-libgcc" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libmingw32.a" />
+					<Add library="\usr\lib\gcc\x86_64-w64-mingw32\4.8\libstdc++.a" />
+					<Add library="\home\tails\build-server\windows-x86_64\boost\stage\lib\libboost_system.a" />
+					<Add library="\home\tails\build-server\windows-x86_64\boost\stage\lib\libboost_filesystem.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libwinpthread.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libole32.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libimm32.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libgdi32.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\liboleaut32.a" />
+					<Add library="\usr\x86_64-w64-mingw32\lib\libversion.a" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -63,6 +98,7 @@
 		<Unit filename="main.h" />
 		<Unit filename="string_stuff.cpp" />
 		<Unit filename="string_stuff.h" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

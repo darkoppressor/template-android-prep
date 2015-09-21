@@ -31,8 +31,6 @@ bool create_asset_lists(std::string directory);
 
 bool create_asset_list(std::string directory);
 
-bool update_source_file_list(std::string project_directory);
-
 bool replace_in_file(std::string filename,std::string target,std::string replacement,bool hide_replacement=false);
 
 #endif

@@ -152,40 +152,69 @@ int main(int argc,char* args[]){
         return 1;
     }
 
+    cout<<"Copying prebuilt shared libraries\n";
+
+    vector<string> abis;
+    abis.push_back("armeabi");
+    abis.push_back("armeabi-v7a");
+    abis.push_back("x86");
+
+    for(size_t i=0;i<abis.size();i++){
+        string abi=abis[i];
+
+        file_io.remove_directory(android_directory+"/jni/"+abi);
+
+        file_io.create_directory(android_directory+"/jni/"+abi);
+
+        string library_location="/home/tails/build-server";
+        #ifdef GAME_OS_WINDOWS
+            library_location="C:/Development/c++";
+        #endif
+
+        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2.so",android_directory+"/jni/"+abi+"/libSDL2.so");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2_image.so",android_directory+"/jni/"+abi+"/libSDL2_image.so");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2_mixer.so",android_directory+"/jni/"+abi+"/libSDL2_mixer.so");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libRakNet.so",android_directory+"/jni/"+abi+"/libRakNet.so");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libCheese-Engine.so",android_directory+"/jni/"+abi+"/libCheese-Engine.so");
+    }
+
     cout<<"Creating symlinks to development libraries\n";
 
-    file_io.remove_file(android_directory+"/jni/SDL2");
-    file_io.remove_file(android_directory+"/jni/SDL2_image");
-    file_io.remove_file(android_directory+"/jni/SDL2_mixer");
-    file_io.remove_file(android_directory+"/jni/RakNet");
-    file_io.remove_file(android_directory+"/jni/boost");
+    file_io.remove_file(android_directory+"/jni/include/SDL2");
+    file_io.remove_file(android_directory+"/jni/include/SDL2_image");
+    file_io.remove_file(android_directory+"/jni/include/SDL2_mixer");
+    file_io.remove_file(android_directory+"/jni/include/RakNet");
+    file_io.remove_file(android_directory+"/jni/include/boost");
+    file_io.remove_file(android_directory+"/jni/include/cheese-engine");
+    file_io.remove_file(android_directory+"/jni/include");
+
+    file_io.create_directory(android_directory+"/jni/include");
 
     #ifdef GAME_OS_WINDOWS
         string windows_android_dir=android_directory;
         boost::algorithm::replace_all(windows_android_dir,"/","\\");
-        string mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2 C:\\Development\\c++\\android\\SDL2";
+        string mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2 C:\\Development\\c++\\android\\SDL2";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer";
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\RakNet C:\\Development\\c++\\android\\raknet\\raknet";
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\RakNet C:\\Development\\c++\\android\\raknet\\raknet";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\boost C:\\Development\\c++\\boost";
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\boost C:\\Development\\c++\\boost";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\cheese-engine C:\\Development\\c++\\cheese-engine";
         system(mklink.c_str());
     #endif
 
     #ifdef GAME_OS_LINUX
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",android_directory+"/jni/SDL2");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",android_directory+"/jni/SDL2_image");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/SDL2_mixer");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",android_directory+"/jni/RakNet");
-        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",android_directory+"/jni/boost");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",android_directory+"/jni/include/SDL2");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",android_directory+"/jni/include/SDL2_image");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/include/SDL2_mixer");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",android_directory+"/jni/include/RakNet");
+        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",android_directory+"/jni/include/boost");
+        boost::filesystem::create_symlink("/home/tails/build-server/cheese-engine",android_directory+"/jni/include/cheese-engine");
     #endif
-
-    if(!update_source_file_list(project_directory)){
-        return 1;
-    }
 
     cout<<"Preparing .properties files\n";
 
@@ -289,35 +318,6 @@ bool create_asset_list(string directory){
     }
 
     return file_io.save_file(directory+"/asset_list",assets);
-}
-
-bool update_source_file_list(string project_directory){
-    string android_directory=project_directory+"/development/android";
-
-    cout<<"Updating source file list in "<<android_directory<<"/jni/src/Android.mk\n";
-
-    string source_files="";
-
-    File_IO file_io;
-
-    for(File_IO_Directory_Iterator it(project_directory);it.evaluate();it.iterate()){
-        if(it.is_regular_file()){
-            string file_name=it.get_file_name();
-
-            boost::algorithm::trim(file_name);
-
-            if(file_name.length()>0 && it.get_file_extension()==".cpp"){
-                source_files+="../../../../"+file_name+" \\\n";
-            }
-        }
-    }
-
-    boost::algorithm::erase_last(source_files," \\");
-
-    file_io.remove_file(android_directory+"/jni/src/Android.mk");
-    file_io.copy_file(android_directory+"/jni/src/Android.mk.template",android_directory+"/jni/src/Android.mk");
-
-    return replace_in_file(android_directory+"/jni/src/Android.mk","SOURCE_FILE_LIST_GOES_HERE",source_files);
 }
 
 bool replace_in_file(string filename,string target,string replacement,bool hide_replacement){

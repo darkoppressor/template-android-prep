@@ -171,11 +171,11 @@ int main(int argc,char* args[]){
             library_location="C:/Development/c++";
         #endif
 
-        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2.so",android_directory+"/jni/"+abi+"/libSDL2.so");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2_image.so",android_directory+"/jni/"+abi+"/libSDL2_image.so");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libSDL2_mixer.so",android_directory+"/jni/"+abi+"/libSDL2_mixer.so");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libRakNet.so",android_directory+"/jni/"+abi+"/libRakNet.so");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/libs/"+abi+"/libCheese-Engine.so",android_directory+"/jni/"+abi+"/libCheese-Engine.so");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2.a",android_directory+"/jni/"+abi+"/libSDL2.a");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_image.a",android_directory+"/jni/"+abi+"/libSDL2_image.a");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_mixer.a",android_directory+"/jni/"+abi+"/libSDL2_mixer.a");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libRakNet.a",android_directory+"/jni/"+abi+"/libRakNet.a");
+        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libCheese-Engine.a",android_directory+"/jni/"+abi+"/libCheese-Engine.a");
     }
 
     cout<<"Creating symlinks to development libraries\n";

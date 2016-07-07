@@ -27,8 +27,10 @@ void correct_slashes(std::string* str_input);
 
 std::vector<std::string> get_key_passwords(const Options& options);
 
-bool create_asset_lists(std::string directory);
+bool check_directories(std::string directory,const std::string& prefix,std::string& directories);
+bool create_directory_list(std::string directory);
 
+bool create_asset_lists(std::string directory);
 bool create_asset_list(std::string directory);
 
 bool replace_in_file(std::string filename,std::string target,std::string replacement,bool hide_replacement=false);

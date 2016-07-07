@@ -146,6 +146,12 @@ int main(int argc,char* args[]){
         boost::filesystem::copy(dir->path(),android_directory+"/assets/data/"+new_location);
     }
 
+    cout<<"Creating directory list\n";
+
+    if(!create_directory_list(android_directory+"/assets")){
+        return 1;
+    }
+
     cout<<"Creating asset lists\n";
 
     if(!create_asset_lists(android_directory+"/assets/data")){
@@ -282,6 +288,40 @@ vector<string> get_key_passwords(const Options& options){
     file.clear();
 
     return key_passwords;
+}
+
+bool check_directories(string directory,const string& prefix,string& directories){
+    for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
+        if(it.is_directory()){
+            string file_name=it.get_file_name();
+
+            boost::algorithm::trim(file_name);
+
+            if(file_name.length()>0){
+                string dir_name=directory+"/"+file_name;
+
+                boost::algorithm::erase_first(dir_name,prefix);
+
+                directories+=dir_name+"\n";
+            }
+
+            if(!check_directories(directory+"/"+file_name,prefix,directories)){
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool create_directory_list(string directory){
+    string directories="";
+
+    check_directories(directory,directory+"/",directories);
+
+    File_IO file_io;
+
+    return file_io.save_file(directory+"/directory_list",directories);
 }
 
 bool create_asset_lists(string directory){

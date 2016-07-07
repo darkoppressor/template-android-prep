@@ -191,7 +191,6 @@ int main(int argc,char* args[]){
     file_io.remove_file(android_directory+"/jni/include/SDL2_mixer");
     file_io.remove_file(android_directory+"/jni/include/RakNet");
     file_io.remove_file(android_directory+"/jni/include/boost");
-    file_io.remove_file(android_directory+"/jni/include/zlib");
     file_io.remove_file(android_directory+"/jni/include/cheese-engine");
     file_io.remove_file(android_directory+"/jni/include");
 
@@ -210,8 +209,6 @@ int main(int argc,char* args[]){
         system(mklink.c_str());
         mklink="mklink /D "+windows_android_dir+"\\jni\\include\\boost C:\\Development\\c++\\boost";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\zlib C:\\Development\\c++\\android\\SDL2_image\\external\\zlib-1.2.8";
-        system(mklink.c_str());
         mklink="mklink /D "+windows_android_dir+"\\jni\\include\\cheese-engine C:\\Development\\c++\\cheese-engine";
         system(mklink.c_str());
     #endif
@@ -222,7 +219,6 @@ int main(int argc,char* args[]){
         boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/include/SDL2_mixer");
         boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",android_directory+"/jni/include/RakNet");
         boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",android_directory+"/jni/include/boost");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image/external/zlib-1.2.8",android_directory+"/jni/include/zlib");
         boost::filesystem::create_symlink("/home/tails/build-server/cheese-engine",android_directory+"/jni/include/cheese-engine");
     #endif
 

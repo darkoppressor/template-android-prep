@@ -158,7 +158,7 @@ int main(int argc,char* args[]){
         return 1;
     }
 
-    cout<<"Copying prebuilt shared libraries\n";
+    cout<<"Copying prebuilt libraries\n";
 
     vector<string> abis;
     abis.push_back("armeabi");

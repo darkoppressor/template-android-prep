@@ -177,6 +177,7 @@ int main(int argc,char* args[]){
             library_location="C:/Development/c++";
         #endif
 
+        file_io.copy_file(library_location+"/android/gpg-cpp-sdk/android/lib/gnustl/"+abi+"/libgpg.a",android_directory+"/jni/"+abi+"/libgpg.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2.a",android_directory+"/jni/"+abi+"/libSDL2.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_image.a",android_directory+"/jni/"+abi+"/libSDL2_image.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_mixer.a",android_directory+"/jni/"+abi+"/libSDL2_mixer.a");
@@ -186,6 +187,7 @@ int main(int argc,char* args[]){
 
     cout<<"Creating symlinks to development libraries\n";
 
+    file_io.remove_file(android_directory+"/jni/include/gpg");
     file_io.remove_file(android_directory+"/jni/include/SDL2");
     file_io.remove_file(android_directory+"/jni/include/SDL2_image");
     file_io.remove_file(android_directory+"/jni/include/SDL2_mixer");
@@ -199,7 +201,9 @@ int main(int argc,char* args[]){
     #ifdef GAME_OS_WINDOWS
         string windows_android_dir=android_directory;
         boost::algorithm::replace_all(windows_android_dir,"/","\\");
-        string mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2 C:\\Development\\c++\\android\\SDL2";
+        string mklink="mklink /D "+windows_android_dir+"\\jni\\include\\gpg C:\\Development\\c++\\android\\gpg-cpp-sdk\\android\\include";
+        system(mklink.c_str());
+        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2 C:\\Development\\c++\\android\\SDL2";
         system(mklink.c_str());
         mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
         system(mklink.c_str());
@@ -214,6 +218,7 @@ int main(int argc,char* args[]){
     #endif
 
     #ifdef GAME_OS_LINUX
+        boost::filesystem::create_symlink("/home/tails/build-server/android/gpg-cpp-sdk/android/include",android_directory+"/jni/include/gpg");
         boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",android_directory+"/jni/include/SDL2");
         boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",android_directory+"/jni/include/SDL2_image");
         boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/include/SDL2_mixer");

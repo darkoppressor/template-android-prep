@@ -21,6 +21,8 @@ public:
     void create_directory(std::string path);
     //This does NOT overwrite new_path if it already exists
     void copy_file(std::string old_path,std::string new_path);
+    //This does NOT overwrite new_path if it already exists
+    void copy_directory(std::string old_path,std::string new_path);
     void remove_file(std::string path);
     void remove_directory(std::string path);
     std::string get_file_name(std::string path);

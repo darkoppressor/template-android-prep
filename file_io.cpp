@@ -71,6 +71,20 @@ void File_IO::copy_file(string old_path,string new_path){
     }
 }
 
+void File_IO::copy_directory(string old_path,string new_path){
+    if(is_directory(old_path) && !directory_exists(new_path)){
+        #ifdef GAME_OS_WINDOWS
+            string copy_dir="copy \""+old_path+"\" \""+new_path+"\"";
+            system(copy_dir.c_str());
+        #endif
+
+        #ifdef GAME_OS_LINUX
+            string copy_dir="cp -r \""+old_path+"\" \""+new_path+"\"";
+            system(copy_dir.c_str());
+        #endif
+    }
+}
+
 void File_IO::remove_file(string path){
     boost::filesystem::remove(path);
 }

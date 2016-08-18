@@ -160,6 +160,11 @@ int main(int argc,char* args[]){
 
     cout<<"Copying prebuilt libraries\n";
 
+    string library_location="/home/tails/build-server";
+    #ifdef GAME_OS_WINDOWS
+        library_location="C:/Development/c++";
+    #endif
+
     vector<string> abis;
     abis.push_back("armeabi");
     abis.push_back("armeabi-v7a");
@@ -172,11 +177,6 @@ int main(int argc,char* args[]){
 
         file_io.create_directory(android_directory+"/jni/"+abi);
 
-        string library_location="/home/tails/build-server";
-        #ifdef GAME_OS_WINDOWS
-            library_location="C:/Development/c++";
-        #endif
-
         file_io.copy_file(library_location+"/android/gpg-cpp-sdk/android/lib/gnustl/"+abi+"/libgpg.a",android_directory+"/jni/"+abi+"/libgpg.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2.a",android_directory+"/jni/"+abi+"/libSDL2.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_image.a",android_directory+"/jni/"+abi+"/libSDL2_image.a");
@@ -184,6 +184,37 @@ int main(int argc,char* args[]){
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libRakNet.a",android_directory+"/jni/"+abi+"/libRakNet.a");
         file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libCheese-Engine.a",android_directory+"/jni/"+abi+"/libCheese-Engine.a");
     }
+
+    cout<<"Copying Google Play services libraries\n";
+
+    file_io.remove_directory(android_directory+"/play-services-base");
+    file_io.remove_directory(android_directory+"/play-services-basement");
+    file_io.remove_directory(android_directory+"/play-services-drive");
+    file_io.remove_directory(android_directory+"/play-services-games");
+    file_io.remove_directory(android_directory+"/play-services-nearby");
+    file_io.remove_directory(android_directory+"/play-services-tasks");
+    file_io.remove_directory(android_directory+"/support-compat");
+    file_io.remove_directory(android_directory+"/support-core-ui");
+    file_io.remove_directory(android_directory+"/support-core-utils");
+    file_io.remove_directory(android_directory+"/support-fragment");
+    file_io.remove_directory(android_directory+"/support-media-compat");
+    file_io.remove_directory(android_directory+"/support-v4");
+
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-base",android_directory+"/play-services-base");
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-basement",android_directory+"/play-services-basement");
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-drive",android_directory+"/play-services-drive");
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-games",android_directory+"/play-services-games");
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-nearby",android_directory+"/play-services-nearby");
+    file_io.copy_directory(library_location+"/android/google-play-services/play-services-tasks",android_directory+"/play-services-tasks");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-compat",android_directory+"/support-compat");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-core-ui",android_directory+"/support-core-ui");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-core-utils",android_directory+"/support-core-utils");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-fragment",android_directory+"/support-fragment");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-media-compat",android_directory+"/support-media-compat");
+    file_io.copy_directory(library_location+"/android/google-play-services/support-v4",android_directory+"/support-v4");
+
+    file_io.create_directory(android_directory+"/libs");
+    file_io.copy_file(library_location+"/android/google-play-services/support-annotations.jar",android_directory+"/libs/support-annotations.jar");
 
     cout<<"Creating symlinks to development libraries\n";
 

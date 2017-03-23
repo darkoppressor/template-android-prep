@@ -2,6 +2,8 @@
 Cheese Engine tool for preparing the Android build files for a project
 https://github.com/darkoppressor/cheese-engine
 
+This project is deprecated. Its features have been rolled into the Cheese Engine's tool system.
+
 This Cheese Engine tool is used to setup various Android related files for building a project for Android.
 
 ## License

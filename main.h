@@ -1,4 +1,4 @@
-/* Copyright (c) 2012 Cheese and Bacon Games, LLC */
+/* Copyright (c) Cheese and Bacon Games */
 /* This file is licensed under the MIT License. */
 /* See the file docs/LICENSE.txt for the full license text. */
 
@@ -10,29 +10,28 @@
 
 void print_error(std::string error_message);
 
-class Options{
-public:
+class Options {
+    public:
+        std::string key_passwords_location_windows;
+        std::string key_passwords_location_linux;
 
-    std::string key_passwords_location_windows;
-    std::string key_passwords_location_linux;
+        Options ();
 
-    Options();
-
-    bool load();
+        bool load();
 };
 
-int main(int argc,char* args[]);
+int main(int argc, char* args[]);
 
 void correct_slashes(std::string* str_input);
 
 std::vector<std::string> get_key_passwords(const Options& options);
 
-bool check_directories(std::string directory,const std::string& prefix,std::string& directories);
+bool check_directories(std::string directory, const std::string& prefix, std::string& directories);
 bool create_directory_list(std::string directory);
 
 bool create_asset_lists(std::string directory);
 bool create_asset_list(std::string directory);
 
-bool replace_in_file(std::string filename,std::string target,std::string replacement,bool hide_replacement=false);
+bool replace_in_file(std::string filename, std::string target, std::string replacement, bool hide_replacement = false);
 
 #endif

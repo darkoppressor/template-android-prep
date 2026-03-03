@@ -1,4 +1,4 @@
-/* Copyright (c) 2012 Cheese and Bacon Games, LLC */
+/* Copyright (c) Cheese and Bacon Games */
 /* This file is licensed under the MIT License. */
 /* See the file docs/LICENSE.txt for the full license text. */
 
@@ -9,13 +9,12 @@
 
 using namespace std;
 
-string File_IO::load_file(string path){
-    string file_data="";
-
+string File_IO::load_file (string path) {
+    string file_data = "";
     ifstream file(path.c_str());
 
-    if(file.is_open()){
-        file>>file_data;
+    if (file.is_open()) {
+        file >> file_data;
     }
 
     file.close();
@@ -24,20 +23,19 @@ string File_IO::load_file(string path){
     return file_data;
 }
 
-bool File_IO::save_file(string path,string data){
+bool File_IO::save_file (string path, string data) {
     ofstream file(path.c_str());
 
-    if(file.is_open()){
-        file<<data;
+    if (file.is_open()) {
+        file << data;
 
         file.close();
         file.clear();
-    }
-    else{
+    } else {
         file.close();
         file.clear();
 
-        cout<<"Error opening file '"<<path<<"' for saving\n";
+        cout << "Error opening file '" << path << "' for saving\n";
 
         return false;
     }
@@ -45,102 +43,103 @@ bool File_IO::save_file(string path,string data){
     return true;
 }
 
-bool File_IO::directory_exists(string path){
+bool File_IO::directory_exists (string path) {
     return boost::filesystem::exists(path);
 }
 
-bool File_IO::file_exists(string path){
+bool File_IO::file_exists (string path) {
     return boost::filesystem::exists(path);
 }
 
-bool File_IO::is_directory(string path){
+bool File_IO::is_directory (string path) {
     return boost::filesystem::is_directory(path);
 }
 
-bool File_IO::is_regular_file(string path){
+bool File_IO::is_regular_file (string path) {
     return boost::filesystem::is_regular_file(path);
 }
 
-void File_IO::create_directory(string path){
+void File_IO::create_directory (string path) {
     boost::filesystem::create_directory(path);
 }
 
-void File_IO::copy_file(string old_path,string new_path){
-    if(is_regular_file(old_path) && !file_exists(new_path)){
-        boost::filesystem::copy(old_path,new_path);
+void File_IO::copy_file (string old_path, string new_path) {
+    if (is_regular_file(old_path) && !file_exists(new_path)) {
+        boost::filesystem::copy(old_path, new_path);
     }
 }
 
-void File_IO::copy_directory(string old_path,string new_path){
-    if(is_directory(old_path) && !directory_exists(new_path)){
+void File_IO::copy_directory (string old_path, string new_path) {
+    if (is_directory(old_path) && !directory_exists(new_path)) {
         #ifdef GAME_OS_WINDOWS
-            string copy_dir="copy \""+old_path+"\" \""+new_path+"\"";
+            string copy_dir = "copy \"" + old_path + "\" \"" + new_path + "\"";
+
             system(copy_dir.c_str());
+
         #endif
 
         #ifdef GAME_OS_LINUX
-            string copy_dir="cp -r \""+old_path+"\" \""+new_path+"\"";
+            string copy_dir = "cp -r \"" + old_path + "\" \"" + new_path + "\"";
+
             system(copy_dir.c_str());
         #endif
     }
 }
 
-void File_IO::remove_file(string path){
+void File_IO::remove_file (string path) {
     boost::filesystem::remove(path);
 }
 
-void File_IO::remove_directory(string path){
+void File_IO::remove_directory (string path) {
     boost::filesystem::remove_all(path);
 }
 
-string File_IO::get_file_name(string path){
+string File_IO::get_file_name (string path) {
     boost::filesystem::path boost_path(path);
+
     return boost_path.filename().string();
 }
 
-File_IO_Directory_Iterator::File_IO_Directory_Iterator(string get_directory){
-    it=boost::filesystem::directory_iterator(get_directory);
+File_IO_Directory_Iterator::File_IO_Directory_Iterator (string get_directory) {
+    it = boost::filesystem::directory_iterator(get_directory);
 }
 
-bool File_IO_Directory_Iterator::evaluate(){
-    if(it!=boost::filesystem::directory_iterator()){
+bool File_IO_Directory_Iterator::evaluate () {
+    if (it != boost::filesystem::directory_iterator()) {
         return true;
-    }
-    else{
+    } else {
         return false;
     }
 }
 
-void File_IO_Directory_Iterator::iterate(){
+void File_IO_Directory_Iterator::iterate () {
     it++;
 }
 
-bool File_IO_Directory_Iterator::is_directory(){
-    if(boost::filesystem::is_directory(it->path())){
+bool File_IO_Directory_Iterator::is_directory () {
+    if (boost::filesystem::is_directory(it->path())) {
         return true;
-    }
-    else{
+    } else {
         return false;
     }
 }
 
-bool File_IO_Directory_Iterator::is_regular_file(){
-    if(boost::filesystem::is_regular_file(it->path())){
+bool File_IO_Directory_Iterator::is_regular_file () {
+    if (boost::filesystem::is_regular_file(it->path())) {
         return true;
-    }
-    else{
+    } else {
         return false;
     }
 }
 
-string File_IO_Directory_Iterator::get_full_path(){
+string File_IO_Directory_Iterator::get_full_path () {
     return it->path().string();
 }
 
-string File_IO_Directory_Iterator::get_file_name(){
+string File_IO_Directory_Iterator::get_file_name () {
     return it->path().filename().string();
 }
 
-string File_IO_Directory_Iterator::get_file_extension(){
+string File_IO_Directory_Iterator::get_file_extension () {
     return it->path().extension().string();
 }

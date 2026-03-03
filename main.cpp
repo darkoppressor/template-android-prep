@@ -1,4 +1,4 @@
-/* Copyright (c) 2012 Cheese and Bacon Games, LLC */
+/* Copyright (c) Cheese and Bacon Games */
 /* This file is licensed under the MIT License. */
 /* See the file docs/LICENSE.txt for the full license text. */
 
@@ -14,41 +14,39 @@
 
 using namespace std;
 
-void print_error(string error_message){
-    cout<<"Error: "<<error_message<<"\n";
+void print_error (string error_message) {
+    cout << "Error: " << error_message << "\n";
 }
 
-Options::Options(){
-    key_passwords_location_windows="";
-    key_passwords_location_linux="";
+Options::Options () {
+    key_passwords_location_windows = "";
+    key_passwords_location_linux = "";
 }
 
-bool Options::load(){
-    cout<<"Reading android-prep-options\n";
+bool Options::load () {
+    cout << "Reading android-prep-options\n";
 
     ifstream file("android-prep-options");
 
-    if(file.is_open()){
-        while(!file.eof()){
-            string line="";
+    if (file.is_open()) {
+        while (!file.eof()) {
+            string line = "";
 
-            getline(file,line);
+            getline(file, line);
 
             boost::algorithm::trim(line);
 
-            if(boost::algorithm::starts_with(line,"windows:")){
-                boost::algorithm::erase_first(line,"windows:");
+            if (boost::algorithm::starts_with(line, "windows:")) {
+                boost::algorithm::erase_first(line, "windows:");
 
-                key_passwords_location_windows=line;
-            }
-            else if(boost::algorithm::starts_with(line,"linux:")){
-                boost::algorithm::erase_first(line,"linux:");
+                key_passwords_location_windows = line;
+            } else if (boost::algorithm::starts_with(line, "linux:")) {
+                boost::algorithm::erase_first(line, "linux:");
 
-                key_passwords_location_linux=line;
+                key_passwords_location_linux = line;
             }
         }
-    }
-    else{
+    } else {
         print_error("Failed to open android-prep-options for reading options");
 
         file.close();
@@ -60,7 +58,7 @@ bool Options::load(){
     file.close();
     file.clear();
 
-    if(key_passwords_location_windows.length()==0 || key_passwords_location_linux.length()==0){
+    if (key_passwords_location_windows.length() == 0 || key_passwords_location_linux.length() == 0) {
         print_error("Failed to load options");
 
         return false;
@@ -69,251 +67,290 @@ bool Options::load(){
     return true;
 }
 
-int main(int argc,char* args[]){
+int main (int argc, char* args[]) {
     File_IO file_io;
     String_Stuff string_stuff;
     Options options;
 
-    //Can this even happen?
-    if(argc<=0){
+    // Can this even happen?
+    if (argc <= 0) {
         print_error("Did not receive the program name");
 
         return 1;
-    }
-    else if(argc!=2){
-        string program_name=args[0];
+    } else if (argc != 2) {
+        string program_name = args[0];
 
-        cout<<program_name<<" - prepare the android/ directory of a Cheese Engine project for building\n";
-        cout<<"Usage: "<<program_name<<" PROJECT-DIRECTORY\n";
+        cout << program_name << " - prepare the android/ directory of a Cheese Engine project for building\n";
+        cout << "Usage: " << program_name << " PROJECT-DIRECTORY\n";
 
         return 0;
     }
 
-    string project_directory=args[1];
+    string project_directory = args[1];
 
-    if(project_directory.length()==0){
+    if (project_directory.length() == 0) {
         print_error("The PROJECT-DIRECTORY argument has a length of 0");
 
         return 1;
     }
 
-    if(boost::algorithm::ends_with(project_directory,"/") || boost::algorithm::ends_with(project_directory,"\\")){
-        project_directory.erase(project_directory.begin()+project_directory.length()-1);
+    if (boost::algorithm::ends_with(project_directory, "/") || boost::algorithm::ends_with(project_directory, "\\")) {
+        project_directory.erase(project_directory.begin() + project_directory.length() - 1);
     }
 
-    if(!boost::filesystem::is_directory(project_directory)){
-        print_error("No such directory: "+project_directory);
+    if (!boost::filesystem::is_directory(project_directory)) {
+        print_error("No such directory: " + project_directory);
 
         return 1;
     }
 
-    if(!options.load()){
+    if (!options.load()) {
         return 1;
     }
 
-    vector<string> key_passwords=get_key_passwords(options);
+    vector<string> key_passwords = get_key_passwords(options);
 
-    if(key_passwords.size()!=2){
+    if (key_passwords.size() != 2) {
         print_error("Incorrect number of key passwords");
 
         return 1;
     }
 
-    string android_directory=project_directory+"/development/android";
+    string android_directory = project_directory + "/development/android";
 
-    cout<<"Populating assets/ directory\n";
+    cout << "Populating assets/ directory\n";
 
-    file_io.remove_directory(android_directory+"/assets");
-    file_io.create_directory(android_directory+"/assets");
-    file_io.copy_file(project_directory+"/save_location.cfg",android_directory+"/assets/save_location.cfg");
+    file_io.remove_directory(android_directory + "/assets");
+    file_io.create_directory(android_directory + "/assets");
+    file_io.copy_file(project_directory + "/save_location.cfg", android_directory + "/assets/save_location.cfg");
 
-    //Android always needs the save location to be set to home, so we will make sure
-    //it is set to that here
-    if(!replace_in_file(android_directory+"/assets/save_location.cfg","local","home")){
+    // Android always needs the save location to be set to home, so we will make sure
+    // it is set to that here
+    if (!replace_in_file(android_directory + "/assets/save_location.cfg", "local", "home")) {
         return 1;
     }
 
-    file_io.create_directory(android_directory+"/assets/data");
-    for(boost::filesystem::recursive_directory_iterator dir(project_directory+"/data"),end;dir!=end;dir++){
-        string new_location=dir->path().string();
+    file_io.create_directory(android_directory + "/assets/data");
+
+    for (boost::filesystem::recursive_directory_iterator dir(project_directory + "/data"), end; dir != end; dir++) {
+        string new_location = dir->path().string();
+
         correct_slashes(&new_location);
 
-        string remove_string=project_directory+"/data/";
+        string remove_string = project_directory + "/data/";
+
         correct_slashes(&remove_string);
 
-        boost::algorithm::erase_first(new_location,remove_string);
+        boost::algorithm::erase_first(new_location, remove_string);
 
-        boost::filesystem::copy(dir->path(),android_directory+"/assets/data/"+new_location);
+        boost::filesystem::copy(dir->path(), android_directory + "/assets/data/" + new_location);
     }
 
-    cout<<"Creating directory list\n";
+    cout << "Creating directory list\n";
 
-    if(!create_directory_list(android_directory+"/assets")){
+    if (!create_directory_list(android_directory + "/assets")) {
         return 1;
     }
 
-    cout<<"Creating asset lists\n";
+    cout << "Creating asset lists\n";
 
-    if(!create_asset_lists(android_directory+"/assets/data")){
+    if (!create_asset_lists(android_directory + "/assets/data")) {
         return 1;
     }
 
-    cout<<"Copying prebuilt libraries\n";
+    cout << "Copying prebuilt libraries\n";
 
-    string library_location="/home/tails/build-server";
+    string library_location = "/home/tails/build-server";
     #ifdef GAME_OS_WINDOWS
-        library_location="C:/Development/c++";
+        library_location = "C:/Development/c++";
+
     #endif
 
     vector<string> abis;
+
     abis.push_back("armeabi");
     abis.push_back("armeabi-v7a");
     abis.push_back("x86");
 
-    for(size_t i=0;i<abis.size();i++){
-        string abi=abis[i];
+    for (size_t i = 0; i < abis.size(); i++) {
+        string abi = abis[i];
 
-        file_io.remove_directory(android_directory+"/jni/"+abi);
+        file_io.remove_directory(android_directory + "/jni/" + abi);
 
-        file_io.create_directory(android_directory+"/jni/"+abi);
+        file_io.create_directory(android_directory + "/jni/" + abi);
 
-        file_io.copy_file(library_location+"/android/gpg-cpp-sdk/android/lib/gnustl/"+abi+"/libgpg.a",android_directory+"/jni/"+abi+"/libgpg.a");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2.a",android_directory+"/jni/"+abi+"/libSDL2.a");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_image.a",android_directory+"/jni/"+abi+"/libSDL2_image.a");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libSDL2_mixer.a",android_directory+"/jni/"+abi+"/libSDL2_mixer.a");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libRakNet.a",android_directory+"/jni/"+abi+"/libRakNet.a");
-        file_io.copy_file(library_location+"/cheese-engine/development/android/obj/local/"+abi+"/libCheese-Engine.a",android_directory+"/jni/"+abi+"/libCheese-Engine.a");
+        file_io.copy_file(library_location + "/android/gpg-cpp-sdk/android/lib/gnustl/" + abi + "/libgpg.a",
+                          android_directory + "/jni/" + abi + "/libgpg.a");
+        file_io.copy_file(library_location + "/cheese-engine/development/android/obj/local/" + abi + "/libSDL2.a",
+                          android_directory + "/jni/" + abi + "/libSDL2.a");
+        file_io.copy_file(library_location + "/cheese-engine/development/android/obj/local/" + abi + "/libSDL2_image.a",
+                          android_directory + "/jni/" + abi + "/libSDL2_image.a");
+        file_io.copy_file(library_location + "/cheese-engine/development/android/obj/local/" + abi + "/libSDL2_mixer.a",
+                          android_directory + "/jni/" + abi + "/libSDL2_mixer.a");
+        file_io.copy_file(library_location + "/cheese-engine/development/android/obj/local/" + abi + "/libRakNet.a",
+                          android_directory + "/jni/" + abi + "/libRakNet.a");
+        file_io.copy_file(library_location + "/cheese-engine/development/android/obj/local/" + abi +
+                          "/libCheese-Engine.a", android_directory + "/jni/" + abi + "/libCheese-Engine.a");
     }
 
-    cout<<"Copying Google Play services libraries\n";
+    cout << "Copying Google Play services libraries\n";
 
-    file_io.remove_directory(android_directory+"/play-services-base");
-    file_io.remove_directory(android_directory+"/play-services-basement");
-    file_io.remove_directory(android_directory+"/play-services-drive");
-    file_io.remove_directory(android_directory+"/play-services-games");
-    file_io.remove_directory(android_directory+"/play-services-nearby");
-    file_io.remove_directory(android_directory+"/play-services-tasks");
-    file_io.remove_directory(android_directory+"/support-compat");
-    file_io.remove_directory(android_directory+"/support-core-ui");
-    file_io.remove_directory(android_directory+"/support-core-utils");
-    file_io.remove_directory(android_directory+"/support-fragment");
-    file_io.remove_directory(android_directory+"/support-media-compat");
-    file_io.remove_directory(android_directory+"/support-v4");
+    file_io.remove_directory(android_directory + "/play-services-base");
+    file_io.remove_directory(android_directory + "/play-services-basement");
+    file_io.remove_directory(android_directory + "/play-services-drive");
+    file_io.remove_directory(android_directory + "/play-services-games");
+    file_io.remove_directory(android_directory + "/play-services-nearby");
+    file_io.remove_directory(android_directory + "/play-services-tasks");
+    file_io.remove_directory(android_directory + "/support-compat");
+    file_io.remove_directory(android_directory + "/support-core-ui");
+    file_io.remove_directory(android_directory + "/support-core-utils");
+    file_io.remove_directory(android_directory + "/support-fragment");
+    file_io.remove_directory(android_directory + "/support-media-compat");
+    file_io.remove_directory(android_directory + "/support-v4");
 
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-base",android_directory+"/play-services-base");
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-basement",android_directory+"/play-services-basement");
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-drive",android_directory+"/play-services-drive");
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-games",android_directory+"/play-services-games");
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-nearby",android_directory+"/play-services-nearby");
-    file_io.copy_directory(library_location+"/android/google-play-services/play-services-tasks",android_directory+"/play-services-tasks");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-compat",android_directory+"/support-compat");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-core-ui",android_directory+"/support-core-ui");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-core-utils",android_directory+"/support-core-utils");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-fragment",android_directory+"/support-fragment");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-media-compat",android_directory+"/support-media-compat");
-    file_io.copy_directory(library_location+"/android/google-play-services/support-v4",android_directory+"/support-v4");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-base",
+                           android_directory + "/play-services-base");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-basement",
+                           android_directory + "/play-services-basement");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-drive",
+                           android_directory + "/play-services-drive");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-games",
+                           android_directory + "/play-services-games");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-nearby",
+                           android_directory + "/play-services-nearby");
+    file_io.copy_directory(library_location + "/android/google-play-services/play-services-tasks",
+                           android_directory + "/play-services-tasks");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-compat",
+                           android_directory + "/support-compat");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-core-ui",
+                           android_directory + "/support-core-ui");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-core-utils",
+                           android_directory + "/support-core-utils");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-fragment",
+                           android_directory + "/support-fragment");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-media-compat",
+                           android_directory + "/support-media-compat");
+    file_io.copy_directory(library_location + "/android/google-play-services/support-v4",
+                           android_directory + "/support-v4");
 
-    file_io.create_directory(android_directory+"/libs");
-    file_io.copy_file(library_location+"/android/google-play-services/support-annotations.jar",android_directory+"/libs/support-annotations.jar");
+    file_io.create_directory(android_directory + "/libs");
+    file_io.copy_file(library_location + "/android/google-play-services/support-annotations.jar",
+                      android_directory + "/libs/support-annotations.jar");
 
-    cout<<"Creating symlinks to development libraries\n";
+    cout << "Creating symlinks to development libraries\n";
 
-    file_io.remove_file(android_directory+"/jni/include/gpg");
-    file_io.remove_file(android_directory+"/jni/include/SDL2");
-    file_io.remove_file(android_directory+"/jni/include/SDL2_image");
-    file_io.remove_file(android_directory+"/jni/include/SDL2_mixer");
-    file_io.remove_file(android_directory+"/jni/include/RakNet");
-    file_io.remove_file(android_directory+"/jni/include/boost");
-    file_io.remove_file(android_directory+"/jni/include/cheese-engine");
-    file_io.remove_file(android_directory+"/jni/include");
+    file_io.remove_file(android_directory + "/jni/include/gpg");
+    file_io.remove_file(android_directory + "/jni/include/SDL2");
+    file_io.remove_file(android_directory + "/jni/include/SDL2_image");
+    file_io.remove_file(android_directory + "/jni/include/SDL2_mixer");
+    file_io.remove_file(android_directory + "/jni/include/RakNet");
+    file_io.remove_file(android_directory + "/jni/include/boost");
+    file_io.remove_file(android_directory + "/jni/include/cheese-engine");
+    file_io.remove_file(android_directory + "/jni/include");
 
-    file_io.create_directory(android_directory+"/jni/include");
+    file_io.create_directory(android_directory + "/jni/include");
 
     #ifdef GAME_OS_WINDOWS
-        string windows_android_dir=android_directory;
-        boost::algorithm::replace_all(windows_android_dir,"/","\\");
-        string mklink="mklink /D "+windows_android_dir+"\\jni\\include\\gpg C:\\Development\\c++\\android\\gpg-cpp-sdk\\android\\include";
+        string windows_android_dir = android_directory;
+
+        boost::algorithm::replace_all(windows_android_dir, "/", "\\");
+
+        string mklink = "mklink /D " + windows_android_dir +
+                        "\\jni\\include\\gpg C:\\Development\\c++\\android\\gpg-cpp-sdk\\android\\include";
+
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2 C:\\Development\\c++\\android\\SDL2";
+        mklink = "mklink /D " + windows_android_dir + "\\jni\\include\\SDL2 C:\\Development\\c++\\android\\SDL2";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
+        mklink = "mklink /D " + windows_android_dir +
+                 "\\jni\\include\\SDL2_image C:\\Development\\c++\\android\\SDL2_image";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer";
+        mklink = "mklink /D " + windows_android_dir +
+                 "\\jni\\include\\SDL2_mixer C:\\Development\\c++\\android\\SDL2_mixer";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\RakNet C:\\Development\\c++\\android\\raknet\\raknet";
+        mklink = "mklink /D " + windows_android_dir +
+                 "\\jni\\include\\RakNet C:\\Development\\c++\\android\\raknet\\raknet";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\boost C:\\Development\\c++\\boost";
+        mklink = "mklink /D " + windows_android_dir + "\\jni\\include\\boost C:\\Development\\c++\\boost";
         system(mklink.c_str());
-        mklink="mklink /D "+windows_android_dir+"\\jni\\include\\cheese-engine C:\\Development\\c++\\cheese-engine";
+        mklink = "mklink /D " + windows_android_dir +
+                 "\\jni\\include\\cheese-engine C:\\Development\\c++\\cheese-engine";
         system(mklink.c_str());
     #endif
 
     #ifdef GAME_OS_LINUX
-        boost::filesystem::create_symlink("/home/tails/build-server/android/gpg-cpp-sdk/android/include",android_directory+"/jni/include/gpg");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",android_directory+"/jni/include/SDL2");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",android_directory+"/jni/include/SDL2_image");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",android_directory+"/jni/include/SDL2_mixer");
-        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",android_directory+"/jni/include/RakNet");
-        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",android_directory+"/jni/include/boost");
-        boost::filesystem::create_symlink("/home/tails/build-server/cheese-engine",android_directory+"/jni/include/cheese-engine");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/gpg-cpp-sdk/android/include",
+                                          android_directory + "/jni/include/gpg");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2",
+                                          android_directory + "/jni/include/SDL2");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_image",
+                                          android_directory + "/jni/include/SDL2_image");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/SDL2_mixer",
+                                          android_directory + "/jni/include/SDL2_mixer");
+        boost::filesystem::create_symlink("/home/tails/build-server/android/raknet/raknet",
+                                          android_directory + "/jni/include/RakNet");
+        boost::filesystem::create_symlink("/home/tails/build-server/linux-x86_64/boost",
+                                          android_directory + "/jni/include/boost");
+        boost::filesystem::create_symlink("/home/tails/build-server/cheese-engine",
+                                          android_directory + "/jni/include/cheese-engine");
     #endif
 
-    cout<<"Preparing .properties files\n";
+    cout << "Preparing .properties files\n";
 
-    file_io.remove_file(android_directory+"/ant.properties");
-    file_io.remove_file(android_directory+"/local.properties");
+    file_io.remove_file(android_directory + "/ant.properties");
+    file_io.remove_file(android_directory + "/local.properties");
 
-    string properties_platform="windows";
+    string properties_platform = "windows";
 
     #ifdef GAME_OS_LINUX
-        properties_platform="linux";
+        properties_platform = "linux";
     #endif
 
-    file_io.copy_file(android_directory+"/properties/"+properties_platform+"/ant.properties",android_directory+"/ant.properties");
-    file_io.copy_file(android_directory+"/properties/"+properties_platform+"/local.properties",android_directory+"/local.properties");
+    file_io.copy_file(android_directory + "/properties/" + properties_platform + "/ant.properties",
+                      android_directory + "/ant.properties");
+    file_io.copy_file(android_directory + "/properties/" + properties_platform + "/local.properties",
+                      android_directory + "/local.properties");
 
-    if(!replace_in_file(android_directory+"/ant.properties","STORE_PASSWORD",key_passwords[0],true)){
+    if (!replace_in_file(android_directory + "/ant.properties", "STORE_PASSWORD", key_passwords[0], true)) {
         return 1;
     }
-    if(!replace_in_file(android_directory+"/ant.properties","ALIAS_PASSWORD",key_passwords[1],true)){
+
+    if (!replace_in_file(android_directory + "/ant.properties", "ALIAS_PASSWORD", key_passwords[1], true)) {
         return 1;
     }
 
     return 0;
 }
 
-void correct_slashes(string* str_input){
-    boost::algorithm::replace_all(*str_input,"\\","/");
+void correct_slashes (string* str_input) {
+    boost::algorithm::replace_all(*str_input, "\\", "/");
 }
 
-vector<string> get_key_passwords(const Options& options){
+vector<string> get_key_passwords (const Options& options) {
     vector<string> key_passwords;
-
-    string keypass_file=options.key_passwords_location_windows;
+    string keypass_file = options.key_passwords_location_windows;
 
     #ifdef GAME_OS_LINUX
-        keypass_file=options.key_passwords_location_linux;
+        keypass_file = options.key_passwords_location_linux;
     #endif
 
-    cout<<"Reading key passwords from "<<keypass_file<<"\n";
+    cout << "Reading key passwords from " << keypass_file << "\n";
 
     ifstream file(keypass_file.c_str());
 
-    if(file.is_open()){
-        while(!file.eof()){
-            string line="";
+    if (file.is_open()) {
+        while (!file.eof()) {
+            string line = "";
 
-            getline(file,line);
+            getline(file, line);
 
             boost::algorithm::trim(line);
 
-            if(line.length()>0){
+            if (line.length() > 0) {
                 key_passwords.push_back(line);
             }
         }
-    }
-    else{
-        print_error("Failed to open "+keypass_file+" for reading key passwords");
+    } else {
+        print_error("Failed to open " + keypass_file + " for reading key passwords");
     }
 
     file.close();
@@ -322,22 +359,22 @@ vector<string> get_key_passwords(const Options& options){
     return key_passwords;
 }
 
-bool check_directories(string directory,const string& prefix,string& directories){
-    for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
-        if(it.is_directory()){
-            string file_name=it.get_file_name();
+bool check_directories (string directory, const string& prefix, string& directories) {
+    for (File_IO_Directory_Iterator it(directory); it.evaluate(); it.iterate()) {
+        if (it.is_directory()) {
+            string file_name = it.get_file_name();
 
             boost::algorithm::trim(file_name);
 
-            if(file_name.length()>0){
-                string dir_name=directory+"/"+file_name;
+            if (file_name.length() > 0) {
+                string dir_name = directory + "/" + file_name;
 
-                boost::algorithm::erase_first(dir_name,prefix);
+                boost::algorithm::erase_first(dir_name, prefix);
 
-                directories+=dir_name+"\n";
+                directories += dir_name + "\n";
             }
 
-            if(!check_directories(directory+"/"+file_name,prefix,directories)){
+            if (!check_directories(directory + "/" + file_name, prefix, directories)) {
                 return false;
             }
         }
@@ -346,28 +383,28 @@ bool check_directories(string directory,const string& prefix,string& directories
     return true;
 }
 
-bool create_directory_list(string directory){
-    string directories="";
+bool create_directory_list (string directory) {
+    string directories = "";
 
-    check_directories(directory,directory+"/",directories);
+    check_directories(directory, directory + "/", directories);
 
     File_IO file_io;
 
-    return file_io.save_file(directory+"/directory_list",directories);
+    return file_io.save_file(directory + "/directory_list", directories);
 }
 
-bool create_asset_lists(string directory){
-    if(!create_asset_list(directory)){
+bool create_asset_lists (string directory) {
+    if (!create_asset_list(directory)) {
         return false;
     }
 
-    for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
-        if(it.is_directory()){
-            string file_name=it.get_file_name();
+    for (File_IO_Directory_Iterator it(directory); it.evaluate(); it.iterate()) {
+        if (it.is_directory()) {
+            string file_name = it.get_file_name();
 
             boost::algorithm::trim(file_name);
 
-            if(!create_asset_lists(directory+"/"+file_name)){
+            if (!create_asset_lists(directory + "/" + file_name)) {
                 return false;
             }
         }
@@ -376,55 +413,53 @@ bool create_asset_lists(string directory){
     return true;
 }
 
-bool create_asset_list(string directory){
-    string assets="";
-
+bool create_asset_list (string directory) {
+    string assets = "";
     File_IO file_io;
 
-    for(File_IO_Directory_Iterator it(directory);it.evaluate();it.iterate()){
-        if(it.is_regular_file()){
-            string file_name=it.get_file_name();
+    for (File_IO_Directory_Iterator it(directory); it.evaluate(); it.iterate()) {
+        if (it.is_regular_file()) {
+            string file_name = it.get_file_name();
 
             boost::algorithm::trim(file_name);
 
-            if(file_name.length()>0){
-                assets+=file_name+"\n";
+            if (file_name.length() > 0) {
+                assets += file_name + "\n";
             }
         }
     }
 
-    return file_io.save_file(directory+"/asset_list",assets);
+    return file_io.save_file(directory + "/asset_list", assets);
 }
 
-bool replace_in_file(string filename,string target,string replacement,bool hide_replacement){
-    if(!boost::filesystem::exists(filename)){
-        print_error("No such file: "+filename);
+bool replace_in_file (string filename, string target, string replacement, bool hide_replacement) {
+    if (!boost::filesystem::exists(filename)) {
+        print_error("No such file: " + filename);
 
         return false;
     }
 
-    string terminal_replacement=replacement;
-    if(hide_replacement){
-        terminal_replacement="REDACTED";
+    string terminal_replacement = replacement;
+
+    if (hide_replacement) {
+        terminal_replacement = "REDACTED";
     }
 
-    cout<<"Renaming all occurrences of "<<target<<" to "<<terminal_replacement<<" in "<<filename<<"\n";
+    cout << "Renaming all occurrences of " << target << " to " << terminal_replacement << " in " << filename << "\n";
 
     vector<string> file_data;
-
     ifstream file(filename.c_str());
 
-    if(file.is_open()){
-        while(!file.eof()){
-            string line="";
+    if (file.is_open()) {
+        while (!file.eof()) {
+            string line = "";
 
-            getline(file,line);
+            getline(file, line);
 
             file_data.push_back(line);
         }
-    }
-    else{
-        print_error("Failed to open "+filename+" for updating (input phase)");
+    } else {
+        print_error("Failed to open " + filename + " for updating (input phase)");
 
         file.close();
         file.clear();
@@ -435,23 +470,22 @@ bool replace_in_file(string filename,string target,string replacement,bool hide_
     file.close();
     file.clear();
 
-    for(int i=0;i<file_data.size();i++){
-        boost::algorithm::replace_all(file_data[i],target,replacement);
+    for (int i = 0; i < file_data.size(); i++) {
+        boost::algorithm::replace_all(file_data[i], target, replacement);
     }
 
     ofstream file_save(filename.c_str());
 
-    if(file_save.is_open()){
-        for(int i=0;i<file_data.size();i++){
-            file_save<<file_data[i];
+    if (file_save.is_open()) {
+        for (int i = 0; i < file_data.size(); i++) {
+            file_save << file_data[i];
 
-            if(i<file_data.size()-1){
-                file_save<<"\n";
+            if (i < file_data.size() - 1) {
+                file_save << "\n";
             }
         }
-    }
-    else{
-        print_error("Failed to open "+filename+" for updating (output phase)");
+    } else {
+        print_error("Failed to open " + filename + " for updating (output phase)");
 
         file_save.close();
         file_save.clear();
